@@ -16,23 +16,51 @@ In the meantime, below is an example of what you can do with just a few lines of
 """
 
 
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+import backtrader as bt
+import streamlit as st
+import pandas as pd
 
-    Point = namedtuple('Point', 'x y')
-    data = []
+# Define the Backtrader strategy
+class MyStrategy(bt.Strategy):
+    params = dict(
+        sma_period_fast=20,
+        sma_period_slow=50
+    )
 
-    points_per_turn = total_points / num_turns
+    def __init__(self):
+        self.sma_fast = bt.indicators.SMA(period=self.params.sma_period_fast)
+        self.sma_slow = bt.indicators.SMA(period=self.params.sma_period_slow)
+        self.crossover = bt.indicators.CrossOver(self.sma_fast, self.sma_slow)
 
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
+    def next(self):
+        if not self.position:
+            if self.crossover > 0:
+                self.buy()
 
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+        elif self.crossover < 0:
+            self.sell()
+
+# Define the Streamlit app
+def app():
+    st.title('Backtrader Strategy')
+    st.write('Enter the strategy parameters:')
+    sma_period_fast = st.slider('SMA Fast Period', 10, 100, 20, 10)
+    sma_period_slow = st.slider('SMA Slow Period', 30, 200, 50, 10)
+
+    # Load the data
+    data = bt.feeds.PandasData(dataname=pd.read_csv('AAPL.csv'), fromdate=datetime(2010, 1, 1), todate=datetime(2021, 1, 1))
+
+    # Create the cerebro engine
+    cerebro = bt.Cerebro()
+
+    # Add the data to the engine
+    cerebro.adddata(data)
+
+    # Add the strategy to the engine
+    cerebro.addstrategy(MyStrategy, sma_period_fast=sma_period_fast, sma_period_slow=sma_period_slow)
+
+    # Run the backtest
+    cerebro.run()
+
+    # Plot the results
+    st.plotly_chart(cerebro.plot())
