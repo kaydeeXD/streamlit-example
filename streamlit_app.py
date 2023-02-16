@@ -1,5 +1,4 @@
 import streamlit as st
-import Bokeh
 
 class MeanReversion(bt.Strategy):
     params = (
@@ -47,7 +46,7 @@ def main():
     end_date = st.sidebar.date_input('End Date')
 
     # Create a Bokeh plot for displaying the strategy
-    bokeh_plot = Bokeh(style='bar', plot_mode='single')
+    bokeh_plot = st.plot(style='bar', plot_mode='single')
 
     # Run the strategy with the given settings
     cerebro = bt.Cerebro()
