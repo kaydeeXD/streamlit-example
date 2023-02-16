@@ -1,4 +1,4 @@
-from collections import namedtuple
+'''from collections import namedtuple
 import altair as alt
 import math
 import pandas as pd
@@ -32,4 +32,48 @@ with st.echo(code_location='below'):
 
     st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
         .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+        .encode(x='x:Q', y='y:Q'))'''
+    
+import streamlit as st
+import os
+import pandas as pd
+from face_detec import main_face 
+from movie_rec import main_movie
+from disaster_twet import main_twet
+from catvsdog import main_catvsdog
+from image_colorization import main_colorization
+
+# -------------------------------------------------------------------------------------------------------------
+def main():
+    st.set_page_config(layout="wide")
+    st.write("")
+    st.sidebar.write("")
+    st.sidebar.write("")
+    st.sidebar.write("")
+    st.sidebar.write("")
+    st.sidebar.subheader("Select an option")
+    activities = [
+        "Cats vs Dogs", "Disaster Tweet Classification", "Movie Recommender", "Face Detection","Image Colorization"]
+    choice = st.sidebar.selectbox("", activities)
+
+# ------------Cats Vs Dogs ----------------------------------------------------------------
+
+    if choice == "Cats vs Dogs":
+        main_catvsdog()
+# ------------------------------------------------------------------------
+    if choice == "Disaster Tweet Classification":
+        main_twet()
+
+# ----------------------------------------------------------------------------------------------------------------
+    if choice == "Movie Recommender":
+        main_movie()
+# -------------------------------------------------------------------------------
+    if choice == "Face Detection": 
+        main_face()
+#-----------------------------------------------------------------------
+    if choice == "Image Colorization":
+        main_colorization()
+
+
+if __name__ == '__main__':
+    main()
