@@ -1,8 +1,36 @@
 import streamlit as st
-from backtrader_plotting import Bokeh
+import Bokeh
 
-# Import your Backtrader strategy
-from my_strategy import MyStrategy
+class MeanReversion(bt.Strategy):
+    params = (
+        ('period', 100),
+        ('deviation', 2),
+        ('trail_percent', 0.03),
+    )
+
+    def __init__(self):
+        self.sma = bt.indicators.SimpleMovingAverage(
+            self.data.close, period=self.params.period
+        )
+        self.order = None
+        self.stop_price = None
+
+    def next(self):
+        if not self.position:
+            if self.data.close < self.sma[0] - self.params.deviation:
+                self.order = self.buy()
+                self.stop_price = self.data.close * (1 - self.params.trail_percent)
+        else:
+            if self.data.close > self.sma[0] + self.params.deviation:
+                self.close()
+                self.order = None
+                self.stop_price = None
+            elif self.data.close < self.stop_price:
+                self.close()
+                self.order = None
+                self.stop_price = None
+            else:
+                self.stop_price = self.data.close * (1 - self.params.trail_percent)
 
 # Define the Streamlit app
 def main():
@@ -25,7 +53,7 @@ def main():
     cerebro = bt.Cerebro()
     data = bt.feeds.YahooFinanceData(dataname=ticker, fromdate=start_date, todate=end_date)
     cerebro.adddata(data)
-    cerebro.addstrategy(MyStrategy)
+    cerebro.addstrategy(MeanReversion)
     cerebro.run()
 
     # Plot the strategy using the Bokeh plot
